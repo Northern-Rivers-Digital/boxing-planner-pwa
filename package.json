@@ -1,1 +1,13 @@
+{
+  "name": "boxing-coach-planner",
+  "version": "1.0.0",
+  "description": "Progressive Web App for Boxing Coach Weekly Planner",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
 
