@@ -1,114 +1,705 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Boxing Coach Weekly Planner</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boxing Coach Weekly Planner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#4f46e5">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
 
-  <!-- Service Worker Installer for AMP -->
-  <script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>
-
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
-    .tab-inactive { border-color: transparent; color: #6b7280; }
-    .content-section { display: none; }
-    .content-section.active { display: block; }
-    .skill-card, .terminology-card { transform-style: preserve-3d; transition: transform 0.6s; }
-    .skill-card .front, .terminology-card .front,
-    .skill-card .back,  .terminology-card .back {
-      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-    }
-    .skill-card .back, .terminology-card .back { transform: rotateY(180deg); }
-    .skill-card.is-flipped, .terminology-card.is-flipped { transform: rotateY(180deg); }
-    .loading-indicator { display: none; text-align: center; padding: 1rem; color: #4f46e5; }
-    .loading-indicator.active { display: block; }
-    .diagram-canvas {
-      background-color: #312e81; border-radius: 8px;
-      margin: 0.5rem auto; max-width: 140px; display: block;
-    }
-  </style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
+        .tab-inactive { border-color: transparent; color: #6b7280; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .skill-card, .terminology-card { transform-style: preserve-3d; transition: transform 0.6s; }
+        .skill-card .front, .terminology-card .front {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            transform: rotateY(0deg);
+        }
+        .skill-card .back, .terminology-card .back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            transform: rotateY(180deg);
+        }
+        .skill-card.is-flipped, .terminology-card.is-flipped { transform: rotateY(180deg); }
+        .loading-indicator { display: none; text-align: center; padding: 1rem; color: #4f46e5; }
+        .loading-indicator.active { display: block; }
+        .diagram-canvas {
+            background-color: #312e81; border-radius: 8px;
+            margin: 0.5rem auto; max-width: 140px; display: block;
+            width: 160px; /* Explicit width for consistent drawing */
+            height: 160px; /* Explicit height for consistent drawing */
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-  <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <header class="text-center mb-8">
-      <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Bronze Coach Training Planner</h1>
-      <p class="mt-2 text-lg text-slate-600">Your interactive guide to building effective boxing sessions.</p>
-      <div id="user-info" class="text-sm text-slate-500 mt-2">Loading user...</div>
-    </header>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Bronze Coach Training Planner</h1>
+            <p class="mt-2 text-lg text-slate-600">Your interactive guide to building effective boxing sessions.</p>
+            <div id="user-info" class="text-sm text-slate-500 mt-2">Loading user...</div>
+        </header>
 
-    <nav class="mb-8 border-b border-slate-200">
-      <ul class="flex flex-wrap -mb-px justify-center text-sm font-medium text-center">
-        <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-active" data-tab="weekly-plan">Weekly Plan</button></li>
-        <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="skills-library">Skills Library</button></li>
-        <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="session-builder">Session Builder</button></li>
-        <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="terminology">Terminology</button></li>
-        <li><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="safety">Safety &amp; Corner</button></li>
-      </ul>
-    </nav>
+        <nav class="mb-8 border-b border-slate-200">
+            <ul class="flex flex-wrap -mb-px justify-center text-sm font-medium text-center">
+                <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-active" data-tab="weekly-plan">Weekly Plan</button></li>
+                <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="skills-library">Skills Library</button></li>
+                <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="session-builder">Session Builder</button></li>
+                <li class="mr-2"><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="terminology">Terminology</button></li>
+                <li><button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="safety">Safety &amp; Corner</button></li>
+            </ul>
+        </nav>
 
-    <main>
-      <!-- Weekly Plan Section -->
-      <section id="weekly-plan" class="content-section active">
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-semibold text-slate-800">This Week's Focus</h2>
-          <p class="mt-1 text-slate-600">A balanced plan focusing on fundamentals as requested. Assign your custom sessions below.</p>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Monday Card -->
-            <div class="day-card bg-white p-6 rounded-xl shadow-md" data-day="monday">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xl font-bold text-indigo-600">Monday Session</h3>
-                <select id="monday-session-select" class="bg-slate-100 border border-slate-300 rounded-md p-2 text-sm"></select>
-              </div>
-              <div id="monday-drills" class="drills mt-4 space-y-3 text-slate-700 min-h-[100px] bg-slate-50 p-3 rounded-lg overflow-y-auto max-h-[200px]">
-                <p class="text-slate-400">No session assigned for Monday.</p>
-              </div>
-            </div>
-            <!-- Thursday Card -->
-            <div class="day-card bg-white p-6 rounded-xl shadow-md" data-day="thursday">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xl font-bold text-amber-600">Thursday Session</h3>
-                <select id="thursday-session-select" class="bg-slate-100 border border-slate-300 rounded-md p-2 text-sm"></select>
-              </div>
-              <div id="thursday-drills" class="drills mt-4 space-y-3 text-slate-700 min-h-[100px] bg-slate-50 p-3 rounded-lg overflow-y-auto max-h-[200px]">
-                <p class="text-slate-400">No session assigned for Thursday.</p>
-              </div>
-            </div>
-          </div>
-          <!-- Chart Section -->
-          <div class="bg-white p-6 rounded-xl shadow-md">
-            <h3 class="text-xl font-bold text-center text-slate-800">Weekly Skill Distribution</h3>
-            <div class="chart-container relative h-64 md:h-80 w-full max-w-sm mx-auto mt-4">
-              <canvas id="focusChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Remaining sections truncated for brevity -->
-    </main>
-  </div>
+        <main>
+            <!-- Weekly Plan Section -->
+            <section id="weekly-plan" class="content-section active">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-slate-800">This Week's Focus</h2>
+                    <p class="mt-1 text-slate-600">A balanced plan focusing on fundamentals as requested. Assign your custom sessions below.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Monday Card -->
+                        <div class="day-card bg-white p-6 rounded-xl shadow-md" data-day="monday">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-xl font-bold text-indigo-600">Monday Session</h3>
+                                <select id="monday-session-select" class="bg-slate-100 border border-slate-300 rounded-md p-2 text-sm"></select>
+                            </div>
+                            <div id="monday-drills" class="drills mt-4 space-y-3 text-slate-700 min-h-[100px] bg-slate-50 p-3 rounded-lg overflow-y-auto max-h-[200px]">
+                                <p class="text-slate-400">No session assigned for Monday.</p>
+                            </div>
+                        </div>
+                        <!-- Thursday Card -->
+                        <div class="day-card bg-white p-6 rounded-xl shadow-md" data-day="thursday">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-xl font-bold text-amber-600">Thursday Session</h3>
+                                <select id="thursday-session-select" class="bg-slate-100 border border-slate-300 rounded-md p-2 text-sm"></select>
+                            </div>
+                            <div id="thursday-drills" class="drills mt-4 space-y-3 text-slate-700 min-h-[100px] bg-slate-50 p-3 rounded-lg overflow-y-auto max-h-[200px]">
+                                <p class="text-slate-400">No session assigned for Thursday.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chart Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-center text-slate-800">Weekly Skill Distribution</h3>
+                        <div class="chart-container relative h-64 md:h-80 w-full max-w-sm mx-auto mt-4">
+                            <canvas id="focusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-  <!-- Service Worker Registration -->
-  <amp-install-serviceworker
-    src="/service-worker.js"
-    layout="nodisplay">
-  </amp-install-serviceworker>
+            <!-- Skills Library Section -->
+            <section id="skills-library" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-slate-800">Skills Library</h2>
+                    <p class="mt-1 text-slate-600">An interactive reference of fundamental techniques from the Bronze Manual. Click a card to flip it for details.</p>
+                </div>
+                <div id="skills-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+            </section>
 
-  <!-- Module script for app logic (Firebase, rendering, event handlers) -->
-  <script type="module">
-    // Your Firebase config, imports, and app logic here
-  </script>
-</body>
-</html>
+            <!-- Session Builder Section -->
+            <section id="session-builder" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-slate-800">Session Builder</h2>
+                    <p class="mt-1 text-slate-600">Create, save, and load custom training sessions.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Your Custom Session</h3>
+                        <div id="custom-session-plan" class="space-y-3 min-h-[200px] bg-slate-50 p-4 rounded-lg">
+                            <p class="text-slate-400">Select drills from the right to add them here.</p>
+                        </div>
+                        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="session-name-input" placeholder="Session Name" class="flex-1 p-2 border border-slate-300 rounded-md">
+                            <button id="save-session-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Save Session</button>
+                            <button id="clear-session-btn" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Clear Session</button>
+                        </div>
+                        <div id="session-builder-message" class="text-sm mt-2 text-center text-green-600"></div>
+                        <div class="loading-indicator" id="session-builder-loading">Saving...</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Available Drills</h3>
+                        <div id="drill-selection" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div>
+                        <h3 class="text-xl font-bold mt-6 mb-4">Load/Manage Saved Sessions</h3>
+                        <select id="load-session-select" class="w-full bg-slate-100 border border-slate-300 rounded-md p-2 text-sm mb-2"></select>
+                        <div class="flex gap-2">
+                            <button id="load-selected-session-btn" class="flex-1 bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">Load Selected</button>
+                            <button id="delete-selected-session-btn" class="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Delete Selected</button>
+                        </div>
+                        <div class="loading-indicator" id="saved-sessions-loading">Loading...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Terminology Section -->
+            <section id="terminology" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-slate-800">Boxing Terminology</h2>
+                    <p class="mt-1 text-slate-600">Standardized terms for clear communication. Click a card to flip for definition and diagram.</p>
+                </div>
+                <div id="terminology-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+            </section>
+
+            <!-- Safety & Corner Section -->
+            <section id="safety" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-slate-800">Safety & Corner Behaviour</h2>
+                    <p class="mt-1 text-slate-600">Key responsibilities for every coach. Use these as interactive checklists before and during sessions.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Pre-Session Safety Checklist</h3>
+                        <ul id="safety-checklist" class="space-y-3"></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Corner Behaviour Guide</h3>
+                        <ul id="corner-checklist" class="space-y-3"></ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Module script for app logic (Firebase, rendering, event handlers) -->
+    <script type="module">
+        // IMPORTANT: Firebase Configuration
+        // This is your specific Firebase project configuration for 'boxing-999ab'.
+        // It has been embedded directly into this file.
+        const firebaseConfig = {
+          apiKey: "AIzaSyCTzJ6tzmoZuziwl0VGaL-4ODaFlKAwINA",
+          authDomain: "boxing-999ab.firebaseapp.com",
+          projectId: "boxing-999ab",
+          storageBucket: "boxing-999ab.firebasestorage.app",
+          messagingSenderId: "824237493712",
+          appId: "1:824237493712:web:74ef0177da2c8468bd7dd5",
+          measurementId: "G-NRLPMDD1DD"
+        };
+
+        // Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, collection, query, onSnapshot, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: Firebase Authentication Provider Setup
+        // The error "auth/configuration-not-found" often means that the authentication method
+        // you are trying to use (in this case, Anonymous Authentication) is NOT enabled
+        // in your Firebase project settings.
+        //
+        // To fix this:
+        // 1. Go to your Firebase project console: https://console.firebase.google.com/project/boxing-999ab/authentication/users
+        // 2. In the left-hand menu, click on "Authentication".
+        // 3. Go to the "Sign-in method" tab.
+        // 4. Find "Anonymous" in the list of providers and ENABLE it.
+        // 5. Click "Save".
+        // After doing this, clear your browser cache and refresh the page.
+
+        // Global Firebase variables (now accessible within this module scope)
+        let firebaseApp = null;
+        let db = null;
+        let auth = null;
+        let userId = null;
+        let isAuthReady = false;
+        // Define appId globally within the module scope
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Diagram drawing functions
+        const diagramFunctions = {
+            drawBasicStance: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const floorY = h * 0.9;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.2); ctx.lineTo(centerX, h * 0.5); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX, h * 0.15, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.5); ctx.lineTo(centerX - w * 0.15, floorY); ctx.stroke();
+                ctx.fillRect(centerX - w * 0.2, floorY - h * 0.05, w * 0.1, h * 0.05);
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.5); ctx.lineTo(centerX + w * 0.15, floorY - h * 0.05); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.1, floorY - h * 0.1, w * 0.1, h * 0.05);
+            },
+            drawGuard: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.3); ctx.lineTo(centerX, h * 0.7); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX, h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.4); ctx.lineTo(centerX - w * 0.2, h * 0.3); ctx.stroke();
+                ctx.fillRect(centerX - w * 0.25, h * 0.25, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.4); ctx.lineTo(centerX + w * 0.1, h * 0.25); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.05, h * 0.2, w * 0.1, h * 0.1);
+            },
+            drawStepForwardBack: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startY = h * 0.6;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.fillRect(w * 0.2, startY, w * 0.1, h * 0.05);
+                ctx.fillRect(w * 0.4, startY, w * 0.1, h * 0.05);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.45, startY - h * 0.1); ctx.lineTo(w * 0.75, startY - h * 0.1); ctx.lineTo(w * 0.70, startY - h * 0.15); ctx.moveTo(w * 0.75, startY - h * 0.1); ctx.lineTo(w * 0.70, startY - h * 0.05); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.75, startY + h * 0.1); ctx.lineTo(w * 0.45, startY + h * 0.1); ctx.lineTo(w * 0.50, startY + h * 0.15); ctx.moveTo(w * 0.45, startY + h * 0.1); ctx.lineTo(w * 0.50, startY + h * 0.05); ctx.stroke();
+            },
+            drawLateralMovement: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startY = h * 0.6;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.fillRect(w * 0.2, startY, w * 0.1, h * 0.05);
+                ctx.fillRect(w * 0.3, startY, w * 0.1, h * 0.05);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.4, startY - h * 0.1); ctx.lineTo(w * 0.1, startY - h * 0.1); ctx.lineTo(w * 0.15, startY - h * 0.15); ctx.moveTo(w * 0.1, startY - h * 0.1); ctx.lineTo(w * 0.15, startY - h * 0.05); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.5, startY + h * 0.1); ctx.lineTo(w * 0.8, startY + h * 0.1); ctx.lineTo(w * 0.75, startY + h * 0.15); ctx.moveTo(w * 0.8, startY + h * 0.1); ctx.lineTo(w * 0.75, startY + h * 0.05); ctx.stroke();
+            },
+            drawPivoting: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX, centerY, w * 0.1, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.15, centerY + h * 0.15); ctx.lineTo(centerX + w * 0.35, centerY + h * 0.35); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX + w * 0.15, centerY - h * 0.15, w * 0.2, Math.PI * 0.2, Math.PI * 1.8, true); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.33, centerY - h * 0.16); ctx.lineTo(centerX + w * 0.30, centerY - h * 0.25); ctx.moveTo(centerX + w * 0.33, centerY - h * 0.16); ctx.lineTo(centerX + w * 0.24, centerY - h * 0.18); ctx.stroke();
+            },
+            drawJab: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startX = w * 0.2;
+                const startY = h / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(startX - w * 0.1, startY - h * 0.2); ctx.lineTo(startX - w * 0.1, startY + h * 0.2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(startX - w * 0.1, startY - h * 0.3, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(startX + w * 0.4, startY); ctx.stroke();
+                ctx.fillRect(startX + w * 0.4, startY - h * 0.05, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.arc(startX + w * 0.6, startY, w * 0.05, 0, Math.PI * 2); ctx.stroke();
+            },
+            drawCross: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startX = w * 0.2;
+                const startY = h / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(startX - w * 0.1, startY - h * 0.2); ctx.lineTo(startX - w * 0.1, startY + h * 0.2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(startX - w * 0.15, startY + h * 0.1, w * 0.1, Math.PI * 0.5, Math.PI * 1.5); ctx.stroke();
+                ctx.beginPath(); ctx.arc(startX - w * 0.1, startY - h * 0.3, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(startX + w * 0.1, startY + h * 0.05); ctx.lineTo(startX + w * 0.5, startY); ctx.stroke();
+                ctx.fillRect(startX + w * 0.5, startY - h * 0.05, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.arc(startX + w * 0.7, startY, w * 0.05, 0, Math.PI * 2); ctx.stroke();
+            },
+            drawLeadHook: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const startY = h * 0.7;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(centerX, startY - h * 0.4); ctx.lineTo(centerX, startY - h * 0.1); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX, startY - h * 0.5, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX + w * 0.2, startY - h * 0.2, w * 0.25, Math.PI * 0.75, Math.PI * 1.75); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.2, startY - h * 0.45, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.arc(centerX + w * 0.2, startY - h * 0.55, w * 0.05, 0, Math.PI * 2); ctx.stroke();
+            },
+            drawRearUppercut: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startX = w * 0.3;
+                const startY = h * 0.8;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(startX, startY - h * 0.4); ctx.lineTo(startX, startY - h * 0.1); ctx.stroke();
+                ctx.beginPath(); ctx.arc(startX, startY - h * 0.5, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(startX + w * 0.1, startY - h * 0.1); ctx.lineTo(startX, startY - h * 0.4); ctx.stroke();
+                ctx.fillRect(startX - w * 0.05, startY - h * 0.45, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.arc(startX, startY - h * 0.55, w * 0.05, 0, Math.PI * 2); ctx.stroke();
+            },
+            drawParry: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerY = h / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(w * 0.2, centerY); ctx.lineTo(w * 0.5, centerY); ctx.stroke();
+                ctx.fillRect(w * 0.45, centerY - h * 0.05, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.moveTo(w * 0.5, centerY + h * 0.05); ctx.lineTo(w * 0.7, centerY - h * 0.05); ctx.stroke();
+                ctx.fillRect(w * 0.65, centerY - h * 0.1, w * 0.1, h * 0.1);
+            },
+            drawBlock: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerY = h / 2;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(w * 0.2, centerY); ctx.lineTo(w * 0.5, centerY); ctx.stroke();
+                ctx.fillRect(w * 0.45, centerY - h * 0.05, w * 0.1, h * 0.1);
+                ctx.fillRect(w * 0.5, centerY - h * 0.15, w * 0.2, h * 0.3);
+            },
+            drawSlip: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const headY = h * 0.3;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX, headY, w * 0.1, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.3, headY); ctx.lineTo(centerX + w * 0.3, headY); ctx.stroke();
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.arc(centerX + w * 0.15, headY + h * 0.15, w * 0.1, 0, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.05, headY + h * 0.05); ctx.lineTo(centerX + w * 0.15, headY + h * 0.15); ctx.lineTo(centerX + w * 0.1, headY + h * 0.18); ctx.moveTo(centerX + w * 0.15, headY + h * 0.15); ctx.lineTo(centerX + w * 0.18, headY + h * 0.1); ctx.stroke();
+            },
+            drawRollWeave: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const headY = h * 0.3;
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX, headY, w * 0.1, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX + w * 0.2, headY + h * 0.1, w * 0.3, Math.PI * 0.75, Math.PI * 1.75); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.2, headY - h * 0.15, w * 0.1, h * 0.1);
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.arc(centerX, headY + h * 0.3, w * 0.2, Math.PI, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([]);
+            },
+            drawLeadHand: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath(); ctx.arc(centerX, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY - h * 0.1); ctx.lineTo(centerX, centerY + h * 0.2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY - h * 0.05); ctx.lineTo(centerX - w * 0.2, centerY - h * 0.15); ctx.stroke();
+                ctx.fillRect(centerX - w * 0.25, centerY - h * 0.2, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX + w * 0.15, centerY + h * 0.1); ctx.stroke();
+            },
+            drawRearHand: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath(); ctx.arc(centerX, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY - h * 0.1); ctx.lineTo(centerX, centerY + h * 0.2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY - h * 0.05); ctx.lineTo(centerX + w * 0.2, centerY - h * 0.15); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.15, centerY - h * 0.2, w * 0.1, h * 0.1);
+                ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX - w * 0.15, centerY + h * 0.1); ctx.stroke();
+            },
+            drawSwitchPunching: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX - w * 0.2, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.2, centerY - h * 0.1); ctx.lineTo(centerX - w * 0.2, centerY + h * 0.2); ctx.stroke();
+                ctx.fillRect(centerX - w * 0.35, centerY - h * 0.15, w * 0.1, h * 0.1);
+                ctx.fillRect(centerX - w * 0.05, centerY - h * 0.15, w * 0.1, h * 0.1);
+
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.05, centerY + h * 0.3); ctx.lineTo(centerX + w * 0.05, centerY + h * 0.3); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.05, centerY + h * 0.3); ctx.lineTo(centerX + w * 0.02, centerY + h * 0.27); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.05, centerY + h * 0.3); ctx.lineTo(centerX + w * 0.02, centerY + h * 0.33); ctx.stroke();
+
+                ctx.beginPath(); ctx.arc(centerX + w * 0.2, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX + w * 0.2, centerY - h * 0.1); ctx.lineTo(centerX + w * 0.2, centerY + h * 0.2); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.15, centerY - h * 0.15, w * 0.1, h * 0.1);
+                ctx.fillRect(centerX + w * 0.35, centerY - h * 0.15, w * 0.1, h * 0.1);
+            },
+            drawPhaseAttacks: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.2, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.2, startY + h * 0.1); ctx.lineTo(w * 0.2, startY + h * 0.3); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(w * 0.25, startY + h * 0.05); ctx.lineTo(w * 0.4, startY + h * 0.05); ctx.stroke();
+                ctx.fillRect(w * 0.35, startY, w * 0.1, h * 0.1);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.45, startY + h * 0.05); ctx.lineTo(w * 0.55, startY + h * 0.05); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.55, startY + h * 0.05); ctx.lineTo(w * 0.52, startY + h * 0.02); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.55, startY + h * 0.05); ctx.lineTo(w * 0.52, startY + h * 0.08); ctx.stroke();
+
+                ctx.beginPath(); ctx.arc(w * 0.7, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.7, startY + h * 0.1); ctx.lineTo(w * 0.7, startY + h * 0.3); ctx.stroke();
+
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.moveTo(w * 0.25, startY + h * 0.2); ctx.lineTo(w * 0.4, startY + h * 0.2); ctx.stroke();
+                ctx.fillRect(w * 0.35, startY + h * 0.15, w * 0.1, h * 0.1);
+                ctx.setLineDash([]);
+            },
+            drawFirstAndThird: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.2, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.2, startY + h * 0.1); ctx.lineTo(w * 0.2, startY + h * 0.3); ctx.stroke();
+                ctx.fillRect(w * 0.15, startY - h * 0.05, w * 0.1, h * 0.1);
+
+                ctx.beginPath(); ctx.arc(w * 0.7, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.7, startY + h * 0.1); ctx.lineTo(w * 0.7, startY + h * 0.3); ctx.stroke();
+                ctx.fillRect(w * 0.65, startY - h * 0.05, w * 0.1, h * 0.1);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.25, startY); ctx.lineTo(w * 0.65, startY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.65, startY); ctx.lineTo(w * 0.62, startY - h * 0.03); ctx.moveTo(w * 0.65, startY); ctx.lineTo(w * 0.62, startY + h * 0.03); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(w * 0.65, startY + h * 0.15); ctx.lineTo(w * 0.25, startY + h * 0.15); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.25, startY + h * 0.15); ctx.lineTo(w * 0.28, startY + h * 0.12); ctx.moveTo(w * 0.25, startY + h * 0.15); ctx.lineTo(w * 0.28, startY + h * 0.18); ctx.stroke();
+            },
+            drawBentArmPunches: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, centerY - h * 0.1); ctx.lineTo(centerX, centerY + h * 0.2); ctx.stroke();
+
+                ctx.beginPath(); ctx.arc(centerX + w * 0.2, centerY - h * 0.1, w * 0.15, Math.PI * 0.75, Math.PI * 1.75); ctx.stroke();
+                ctx.fillRect(centerX + w * 0.15, centerY - h * 0.25, w * 0.1, h * 0.1);
+
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.1, centerY + h * 0.1); ctx.lineTo(centerX - w * 0.1, centerY - h * 0.05); ctx.stroke();
+                ctx.fillRect(centerX - w * 0.15, centerY - h * 0.1, w * 0.1, h * 0.1);
+            },
+            drawKeepYourShape: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const floorY = h * 0.9;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(centerX, h * 0.2); ctx.lineTo(centerX, h * 0.5); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX, h * 0.15, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+
+                ctx.fillRect(centerX - w * 0.2, floorY - h * 0.05, w * 0.1, h * 0.05);
+                ctx.fillRect(centerX + w * 0.1, floorY - h * 0.1, w * 0.1, h * 0.05);
+
+                ctx.fillRect(centerX - w * 0.25, h * 0.25, w * 0.1, h * 0.1);
+                ctx.fillRect(centerX + w * 0.15, h * 0.25, w * 0.1, h * 0.1);
+
+                ctx.font = `${w * 0.08}px Inter`;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillText('STANCE + GUARD', centerX - w * 0.45, floorY + h * 0.15);
+            },
+            drawShortMidLongDistance: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.15, centerY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(w * 0.85, centerY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(w * 0.25, centerY - h * 0.2); ctx.lineTo(w * 0.35, centerY - h * 0.2); ctx.stroke();
+                ctx.fillText('Short', w * 0.3, centerY - h * 0.25);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.25, centerY); ctx.lineTo(w * 0.55, centerY); ctx.stroke();
+                ctx.fillText('Mid', w * 0.4, centerY - h * 0.05);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.25, centerY + h * 0.2); ctx.lineTo(w * 0.75, centerY + h * 0.2); ctx.stroke();
+                ctx.fillText('Long', w * 0.5, centerY + h * 0.15);
+            },
+            drawClosedOpenGuard: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.25, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillRect(w * 0.2, centerY - h * 0.1, w * 0.1, h * 0.2);
+                ctx.fillRect(w * 0.3, centerY - h * 0.1, w * 0.1, h * 0.2);
+                ctx.fillText('Closed', w * 0.2, centerY + h * 0.25);
+
+                ctx.beginPath(); ctx.arc(w * 0.75, centerY - h * 0.2, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.7, centerY - h * 0.1); ctx.lineTo(w * 0.65, centerY + h * 0.1); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.8, centerY - h * 0.1); ctx.lineTo(w * 0.85, centerY + h * 0.1); ctx.stroke();
+                ctx.fillText('Open', w * 0.72, centerY + h * 0.25);
+            },
+            drawPushAway: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const startY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.2, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.2, startY + h * 0.1); ctx.lineTo(w * 0.2, startY + h * 0.3); ctx.stroke();
+
+                ctx.beginPath(); ctx.arc(w * 0.7, startY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.7, startY + h * 0.1); ctx.lineTo(w * 0.7, startY + h * 0.3); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(w * 0.65, startY + h * 0.15); ctx.lineTo(w * 0.4, startY + h * 0.15); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.4, startY + h * 0.15); ctx.lineTo(w * 0.43, startY + h * 0.12); ctx.moveTo(w * 0.4, startY + h * 0.15); ctx.lineTo(w * 0.43, startY + h * 0.18); ctx.stroke();
+
+                ctx.fillText('Push-Away', w * 0.4, startY + h * 0.35);
+            },
+            drawTrunkDefense: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const headY = h * 0.3;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX, headY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(centerX, headY + h * 0.1); ctx.lineTo(centerX, headY + h * 0.4); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.3, headY); ctx.lineTo(centerX + w * 0.3, headY); ctx.stroke();
+
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.arc(centerX + w * 0.15, headY + h * 0.15, w * 0.1, 0, Math.PI * 2); ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillText('Trunk Movement', centerX - w * 0.4, headY + h * 0.6);
+            },
+            drawHandArmDefense: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.moveTo(w * 0.2, centerY); ctx.lineTo(w * 0.5, centerY); ctx.stroke();
+                ctx.fillRect(w * 0.45, centerY - h * 0.05, w * 0.1, h * 0.1);
+
+                ctx.fillRect(w * 0.5, centerY - h * 0.15, w * 0.2, h * 0.3);
+                ctx.fillText('Hand/Arm Defense', w * 0.3, centerY + h * 0.25);
+            },
+            drawLegDefense: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const floorY = h * 0.9;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.3, floorY - h * 0.5, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.3, floorY - h * 0.4); ctx.lineTo(w * 0.3, floorY - h * 0.1); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(w * 0.3, floorY - h * 0.1); ctx.lineTo(w * 0.2, floorY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.3, floorY - h * 0.1); ctx.lineTo(w * 0.4, floorY); ctx.stroke();
+
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.moveTo(w * 0.4, floorY); ctx.lineTo(w * 0.55, floorY); ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillText('Leg Defense (Step)', w * 0.2, floorY + h * 0.15);
+            },
+            drawFootDefense: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const floorY = h * 0.9;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(w * 0.3, floorY - h * 0.5, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.3, floorY - h * 0.4); ctx.lineTo(w * 0.3, floorY - h * 0.1); ctx.stroke();
+
+                ctx.fillRect(w * 0.25, floorY - h * 0.05, w * 0.1, h * 0.05);
+                ctx.fillRect(w * 0.35, floorY - h * 0.05, w * 0.1, h * 0.05);
+
+                ctx.beginPath(); ctx.moveTo(w * 0.4, floorY); ctx.lineTo(w * 0.55, floorY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w * 0.55, floorY); ctx.lineTo(w * 0.52, floorY - h * 0.03); ctx.moveTo(w * 0.55, floorY); ctx.lineTo(w * 0.52, floorY + h * 0.03); ctx.stroke();
+
+                ctx.fillText('Foot Defense (Move)', w * 0.2, floorY + h * 0.15);
+            },
+            drawAngles: function(ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const centerX = w / 2;
+                const centerY = h / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                ctx.beginPath(); ctx.arc(centerX - w * 0.3, centerY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(centerX + w * 0.3, centerY, w * 0.08, 0, Math.PI * 2); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.2, centerY - h * 0.2); ctx.lineTo(centerX + w * 0.2, centerY - h * 0.2); ctx.stroke();
+                ctx.fillText('Angle 1', centerX - w * 0.1, centerY - h * 0.25);
+
+                ctx.beginPath(); ctx.moveTo(centerX - w * 0.2, centerY + h * 0.2); ctx.lineTo(centerX + w * 0.2, centerY + h * 0.2); ctx.stroke();
+                ctx.fillText('Angle 2', centerX - w * 0.1, centerY + 
